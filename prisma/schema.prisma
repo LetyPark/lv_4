@@ -13,15 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Users {
   id        Int      @id @default(autoincrement()) @map("id")
   nickname  String   @unique @map("nickname")
   password  String   @map("password")
   userType  UserTypes   @default(CUSTOMER) @map("userType")
-
-  Menus    Menus[]
-  Categories Categories[]
 
   @@map("Users")
 }
@@ -35,27 +31,22 @@ model Categories {
   id     Int    @id @default(autoincrement()) @map("id")
   name   String @map("name")
   order  Int    @map("order")
-  userId Int    @map("userId") // user 테이블을 참조하는 외래키
 
   menus Menus[]
-  user Users @relation(fields:[userId], references:[id], onDelete: Cascade)
   
   @@map("Categories")
 }
-
 model Menus{
   id          Int    @id @default(autoincrement()) @map("id")
   name        String @map("name")
   description String @db.Text @map("description")
-  image       String @map("Image")
+  image       String @map("image")
   price       Int    @map("price")
   order       Int    @map("order")
   status      Status @default(FOR_SALE) @map("status")
-  categoryId  Int    @map("categoryId")
-  userId      Int    @map("userId")
 
-  category Categories @relation(fields : [categoryId], references : [id], onDelete : Cascade)
-  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)  
+  categoryId  Int    @map("categoryId")
+  category    Categories @relation(fields: [categoryId], references: [id])
   
   @@map("Menus")
 }

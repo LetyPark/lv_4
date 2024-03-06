@@ -20,7 +20,6 @@ export default async function (req, res, next) {
         const { nickname, role } = decodedAccessToken;
 
         let decodedAccessToken;
-        let decodedRefreshToken;
         try {
             // 액세스 토큰 검증
             decodedAccessToken = jwt.verify(accessTokenValue, 'access-secret-key', {
@@ -34,7 +33,7 @@ export default async function (req, res, next) {
             // 리프레시 토큰 검증
             const { refreshToken } = req.cookies;
 
-            decodedRefreshToken = jwt.verify(refreshToken, 'refresh-secret-key');
+            const decodedRefreshToken = jwt.verify(refreshToken, 'refresh-secret-key');
 
             if (!decodedRefreshToken) {
                 return res.status(401).json({ errorMessage: '리프레시 토큰이 유효하지 않습니다.' });

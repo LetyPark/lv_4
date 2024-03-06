@@ -39,8 +39,11 @@ export default async function (req, res, next) {
                 return res.status(401).json({ errorMessage: '리프레시 토큰이 유효하지 않습니다.' });
             }
 
+            // 페이로드에 저장할 데이터
+            const payload = { nickname: user.nickname, role: user.userType };
+
             // 액세스 토큰이 만료되었을 경우, 새로운 액세스 토큰 발급
-            const newAccessToken = jwt.sign({ nickname, role }, 'access-secret-key', {
+            const newAccessToken = jwt.sign(payload, 'access-secret-key', {
                 expiresIn: '10m',
             });
             res.cookie('accessToken', newAccessToken, { httpOnly: true });

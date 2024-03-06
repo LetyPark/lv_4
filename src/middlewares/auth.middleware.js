@@ -23,7 +23,9 @@ export default async function (req, res, next) {
         let decodedRefreshToken;
         try {
             // 액세스 토큰 검증
-            decodedAccessToken = jwt.verify(accessTokenValue, 'access-secret-key');
+            decodedAccessToken = jwt.verify(accessTokenValue, 'access-secret-key', {
+                expiresIn: '10s',
+            });
         } catch (error) {
             // 액세스 토큰이 만료된 경우
             if (error.name === 'TokenExpiredError') {

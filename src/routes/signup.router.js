@@ -30,6 +30,7 @@ router.post('/sign-up', async (req, res, next) => {
         // 409 중복된 닉네임으로 회원가입을 시도한 경우
         if (isExistUser) return res.status(409).json({ message: '중복된 닉네임입니다.' });
 
+        // 새 유저 등록
         const user = await prisma.users.create({
             data: { nickname, password, userType: userType },
         });

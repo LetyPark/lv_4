@@ -20,7 +20,12 @@ router.post('/sign-in', async (req, res, next) => {
     if (password !== user.password)
         return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
 
-    const token = jwt.sign({ nickname: user.nickname }, 'secret-key');
+    // 페이로드에 저장할 데이터
+    const payload = { nickname: user.nickname, role: user.userType };
+
+    // JWT 토큰 생성
+    const token = jwt.sign(payload, 'secret-key');
+    console.log('토큰 : ' + token);
 
     res.cookie('loginSetToken', `Bearer ${token}`);
 

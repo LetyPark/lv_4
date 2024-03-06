@@ -12,12 +12,13 @@ export default async function (req, res, next) {
         // jwt 토큰 검증
         const decodedToken = jwt.verify(token, 'secret-key');
 
-        const nickname = decodedToken.nickname;
+        const { nickname, role } = decodedToken;
 
         const user = await prisma.users.findFirst({ where: { nickname } });
         if (!user) throw new Error('사용자가 존재하지 않습니다.');
 
         req.user = user;
+        req.role = role;
 
         next();
     } catch (error) {

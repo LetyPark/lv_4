@@ -11,11 +11,20 @@ const signupSchema = Joi.object({
         .min(3)
         .max(15)
         .pattern(/^[a-zA-Z0-9]+$/)
-        .required(),
-    // .message('닉네임 형식에 일치하지 않습니다.'), // 에러
-    // .message({ 'string.pattern.base': '닉네임 형식에 일치하지 않습니다. ' }), // 에러
-    password: Joi.string().min(8).max(20).invalid(Joi.ref('nickname')).required(),
-    // .message({ 'any.invalid': '비밀번호 형식에 일치하지 않습니다.' }), // 에러
+        .required()
+        .messages({
+            // 400 body 또는 params를 입력 받지 못한 경우
+            'any.required': '데이터 형식이 올바르지 않습니다.', // 닉네임 자체가 요청 데이터에 없는 경우
+            'string.empty': '데이터 형식이 올바르지 않습니다.', // 닉네임이 비어 있는 경우
+            'string.pattern.base': '닉네임 형식에 일치하지 않습니다.', // 지정된 패턴과 일치하지 않는 경우
+        }),
+    password: Joi.string().min(8).max(20).invalid(Joi.ref('nickname')).required().messages({
+        // 400 body 또는 params를 입력 받지 못한 경우
+        'any.required': '데이터 형식이 올바르지 않습니다.', // 비밀번호 자체가 요청 데이터에 없는 경우
+        'string.empty': '데이터 형식이 올바르지 않습니다.', // 비밀번호가 비어 있는 경우
+        'any.invalid': '비밀번호에 닉네임이 포함될 수 없습니다.',
+        'string.pattern.base': '비밀번호 형식에 일치하지 않습니다.', // 지정된 패턴과 일치하지 않는 경우
+    }),
     userType: Joi.string().valid('CUSTOMER', 'OWNER'),
 });
 
@@ -24,12 +33,8 @@ router.post('/sign-up', async (req, res, next) => {
     try {
         const { nickname, password, userType } = await signupSchema.validateAsync(req.body);
 
-        // 400 body 또는 params를 입력 받지 못한 경우
-        if (!nickname || !password)
-            return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
-
-        const isExistUser = await prisma.users.findFirst({ where: { nickname } });
         // 409 중복된 닉네임으로 회원가입을 시도한 경우
+        const isExistUser = await prisma.users.findFirst({ where: { nickname } });
         if (isExistUser) return res.status(409).json({ message: '중복된 닉네임입니다.' });
 
         // bcrypt를 이용해서 암호화된 문자열을 저장하기 위한 변수.
@@ -75,11 +80,7 @@ router.post('/sign-up', async (req, res, next) => {
 // 로그인 API
 router.post('/sign-in', async (req, res, next) => {
     try {
-        const { nickname, password } = req.body;
-
-        // 400 body 또는 params를 입력받지 못한 경우
-        if (!nickname || !password)
-            return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+        const { nickname, password } = await signupSchema.validateAsync(req.body);
 
         // 401 존재하지 않는 닉네임으로 시도한 경우
         const user = await prisma.users.findFirst({ where: { nickname } });
@@ -94,16 +95,21 @@ router.post('/sign-in', async (req, res, next) => {
         const payload = { nickname: user.nickname, role: user.userType };
 
         // JWT 토큰 생성
-        const accessToken = jwt.sign(payload, 'access-secret-key', { expiresIn: '5m' }); // 유효시간 5분
-        const refreshToken = jwt.sign(payload, 'refresh-secret-key', { expiresIn: '7d' }); // 유효시간 7일
+        const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: '10m',
+        }); // 유효시간 5분
+        const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+            expiresIn: '7d',
+        }); // 유효시간 7일
 
         res.cookie('accessToken', `Bearer ${accessToken}`);
         res.cookie('refreshToken', `Bearer ${refreshToken}`);
 
         return res.status(200).json({ message: '로그인에 성공하였습니다.' });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ errorMessage: '서버 오류가 발생했습니다.' });
+        // 그 외의 모든 에러를 next 함수로 전달
+        console.error(error.message);
+        return next(error);
     }
 });
 

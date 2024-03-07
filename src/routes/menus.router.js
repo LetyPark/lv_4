@@ -12,16 +12,20 @@ router.post('/categories/:categoryId/menus', authMiddleware, checkUserRole, asyn
         const { name, description, image, price } = req.body;
 
         // 400 body 또는 params를 입력받지 못한 경우
-        if (!categoryId || !name || !description || !image || !price)
-            return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+        if (!categoryId || !name || !description || !image || !price) throw { statusCode: 400 };
 
         // 404 categoryId에 해당하는 카테고리가 존재하지 않을 경우
         const category = await prisma.categories.findFirst({ where: { id: +categoryId } });
-        if (!category) return res.status(404).json({ message: '존재하지 않는 카테고리입니다.' });
+        if (!category) throw { statusCode: 404 };
 
-        // 400 메뉴 가격이 0보다 작은 경우
-        if (price <= 0) return res.status(400).json({ message: '메뉴 가격은 0보다 작을 수 없습니다.' });
-
+        // 메뉴 가격이 0인 경우
+        if (price === 0) {
+            console.log('🎉🎉🎉🎉🎉Price is zero');
+            throw { statusCode: 400, priceZero: true };
+            // 400 메뉴 가격이 0보다 작은 경우
+        } else if (price < 0) {
+            throw { statusCode: 400, priceInvalid: true };
+        }
         // 401 로그인 되지 않은 상태인 경우 -> authMiddleware에서 처리하기 때문에 생략.
         // 401 사장님(OWNER) 토큰을 가지고 있지 않은 경우 -> checkUserRole 에서 처리하기 때문에 생략.
 
@@ -52,11 +56,11 @@ router.get('/categories/:categoryId/menus', async (req, res, next) => {
         const { categoryId } = req.params;
 
         // 400 body 또는 params를 입력받지 못한 경우
-        if (!categoryId) return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+        if (!categoryId) throw { statusCode: 400 };
 
         // 404 categoryId에 해당하는 카테고리가 존재하지 않을 경우
         const category = await prisma.categories.findFirst({ where: { id: +categoryId } });
-        if (!category) return res.status(404).json({ message: '존재하지 않는 카테고리입니다.' });
+        if (!category) throw { statusCode: 404 };
 
         // 메뉴 조회
         const menus = await prisma.menus.findMany({
@@ -77,11 +81,11 @@ router.get('/categories/:categoryId/menus/:menuId', async (req, res, next) => {
         const { categoryId, menuId } = req.params;
 
         // 400 body 또는 params를 입력받지 못한 경우
-        if (!categoryId || !menuId) return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+        if (!categoryId || !menuId) throw { statusCode: 400 };
 
         // 404 categoryId에 해당하는 카테고리가 존재하지 않을 경우
         const category = await prisma.categories.findFirst({ where: { id: +categoryId } });
-        if (!category) return res.status(404).json({ message: '존재하지 않는 카테고리입니다.' });
+        if (!category) throw { statusCode: 404 };
 
         const menu = await prisma.menus.findFirst({
             where: { id: +menuId, categoryId: +categoryId },
@@ -95,6 +99,8 @@ router.get('/categories/:categoryId/menus/:menuId', async (req, res, next) => {
                 status: true,
             },
         });
+
+        if (!menu) throw { statusCode: 404, menuNotFound: true };
 
         return res.status(200).json({ data: menu });
     } catch (error) {
@@ -110,19 +116,18 @@ router.patch('/categories/:categoryId/menus/:menuId', authMiddleware, checkUserR
 
         // 400 body 또는 params를 입력받지 못한 경우
         if (!categoryId || !menuId || !name || !description || !image || !price || !order || !status)
-            return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+            throw { statusCode: 400 };
 
         // 404 categoryId에 해당하는 카테고리가 존재하지 않을 경우
         const category = await prisma.categories.findFirst({ where: { id: +categoryId } });
-        if (!category) return res.status(404).json({ message: '존재하지 않는 카테고리입니다.' });
+        if (!category) throw { statusCode: 404 };
 
         // 400 메뉴 가격이 0보다 작은 경우
-        if (price <= 0) return res.status(400).json({ message: '메뉴 가격은 0보다 작을 수 없습니다.' });
-
+        if (price <= 0) throw { statusCode: 400, priceInvalid: true };
         // 401 로그인 되지 않은 상태인 경우 -> authMiddleware에서 처리하기 때문에 생략.
         // 401 사장님(OWNER) 토큰을 가지고 있지 않은 경우 -> checkUserRole 에서 처리하기 때문에 생략.
 
-        await prisma.menus.update({
+        const menu = await prisma.menus.update({
             where: { id: +menuId, categoryId: +categoryId },
             data: {
                 name: name,
@@ -133,6 +138,7 @@ router.patch('/categories/:categoryId/menus/:menuId', authMiddleware, checkUserR
                 status: status,
             },
         });
+        if (!menu) throw { statusCode: 404, menuNotFound: true };
 
         return res.status(200).json({ message: '메뉴를 수정하였습니다.' });
     } catch (error) {
@@ -146,15 +152,15 @@ router.delete('/categories/:categoryId/menus/:menuId', authMiddleware, checkUser
         const { categoryId, menuId } = req.params;
 
         // 400 body 또는 params를 입력받지 못한 경우
-        if (!categoryId || !menuId) return res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+        if (!categoryId || !menuId) throw { statusCode: 400 };
 
         // 404 categoryId에 해당하는 카테고리가 존재하지 않을 경우
         const category = await prisma.categories.findFirst({ where: { id: +categoryId } });
-        if (!category) return res.status(404).json({ message: '존재하지 않는 카테고리입니다.' });
+        if (!category) throw { statusCode: 404, categoryNotFound: true };
 
         // 404 menuId에 해당하는 메뉴가 존재하지 않을 경우
         const menu = await prisma.menus.findFirst({ where: { id: +menuId } });
-        if (!menu) return res.status(404).json({ message: '존재하지 않는 메뉴입니다.' });
+        if (!menu) throw { statusCode: 404, menuNotFound: true };
 
         // 401 로그인 되지 않은 상태인 경우 -> authMiddleware에서 처리하기 때문에 생략.
         // 401 사장님(OWNER) 토큰을 가지고 있지 않은 경우 -> checkUserRole 에서 처리하기 때문에 생략.

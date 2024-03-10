@@ -2,7 +2,7 @@ import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import Joi from 'joi';
 import authMiddleware from '../middlewares/auth.middleware.js';
-import checkUserRole from '../middlewares/checkUserRole.middleware.js';
+import checkUserRole from '../middlewares/checkOwner.middleware.js';
 
 const router = express.Router();
 

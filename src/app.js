@@ -2,6 +2,7 @@ import express from 'express';
 import categoryRouter from './routes/categories.router.js';
 import menuRouter from './routes/menus.router.js';
 import usersRouter from './routes/users.router.js';
+import orderRouter from './routes/orders.router.js';
 import cookieParser from 'cookie-parser';
 import errorHandlingMiddleware from './middlewares/error-handling.middleware.js';
 
@@ -11,7 +12,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api', [categoryRouter, menuRouter, usersRouter]);
+app.use('/api', [categoryRouter, menuRouter, usersRouter, orderRouter]);
 
 app.use(errorHandlingMiddleware);
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
-import checkUserRole from '../middlewares/checkUserRole.middleware.js';
+import checkUserRole from '../middlewares/checkOwner.middleware.js';
 
 const router = express.Router();
 
@@ -20,7 +20,6 @@ router.post('/categories/:categoryId/menus', authMiddleware, checkUserRole, asyn
 
         // 메뉴 가격이 0인 경우
         if (price === 0) {
-            console.log('🎉🎉🎉🎉🎉Price is zero');
             throw { statusCode: 400, priceZero: true };
             // 400 메뉴 가격이 0보다 작은 경우
         } else if (price < 0) {

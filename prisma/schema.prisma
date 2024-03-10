@@ -19,6 +19,8 @@ model Users {
   password  String   @map("password")
   userType  UserTypes   @default(CUSTOMER) @map("userType")
 
+  orders      Orders[] 
+
   @@map("Users")
 }
 
@@ -48,10 +50,33 @@ model Menus{
   categoryId  Int    @map("categoryId")
   category    Categories @relation(fields: [categoryId], references: [id])
   
+  orders      Orders[] 
+
   @@map("Menus")
 }
 
 enum Status{
   FOR_SALE
   SOLD_OUT
+}
+
+model Orders {
+  id Int @id @default(autoincrement()) @map("id")
+  quantity Int @map("quantity")
+  status OrderType @default(PENDING) @map("status")
+  orderDate DateTime @default(now()) @map("orderDate")
+
+  menuId  Int    @map("menuId")
+  menu    Menus @relation(fields: [menuId], references: [id])
+
+  userId Int @map("userId") // 사용자를 식별하기 위한 필드
+  user   Users @relation(fields: [userId], references: [id])
+
+  @@map("Orders")
+}
+
+enum OrderType {
+  PENDING
+  ACCEPTED
+  CANCEL
 }

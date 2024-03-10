@@ -1,4 +1,4 @@
-export default async function checkUserRole(req, res, next) {
+export default async function checkOwner(req, res, next) {
     try {
         // 401 사장님(OWNER) 토큰을 가지고 있지 않은 경우
         if (res.locals.role !== 'OWNER') {

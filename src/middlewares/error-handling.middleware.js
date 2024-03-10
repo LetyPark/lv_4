@@ -11,6 +11,9 @@ export default function (err, req, res, next) {
         } else if (err.menuNotFound) {
             statusCode = 404;
             errorMessage = '존재하지 않는 메뉴입니다.';
+        } else if (err.orderNotFound) {
+            statusCode = 404;
+            errorMessage = '존재하지 않는 주문내역입니다.';
         }
     } else if (err.statusCode === 400) {
         if (err.priceZero) {

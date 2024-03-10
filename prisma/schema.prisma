@@ -33,6 +33,7 @@ model Categories {
   id     Int    @id @default(autoincrement()) @map("id")
   name   String @map("name")
   order  Int    @map("order")
+  deletedAt DateTime? @map("deletedAt") // 삭제 플래그 필드 추가
 
   menus Menus[]
   
@@ -46,7 +47,8 @@ model Menus{
   price       Int    @map("price")
   order       Int    @map("order")
   status      Status @default(FOR_SALE) @map("status")
-
+  deletedAt   DateTime? @map("deletedAt") // 삭제 플래그 필드 추가
+  
   categoryId  Int    @map("categoryId")
   category    Categories @relation(fields: [categoryId], references: [id])
   

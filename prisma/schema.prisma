@@ -39,6 +39,7 @@ model Categories {
   
   @@map("Categories")
 }
+
 model Menus{
   id          Int    @id @default(autoincrement()) @map("id")
   name        String @map("name")
